@@ -104,4 +104,12 @@ public class AnnotateurService extends GenericUserService {
     public long countActiveAnnotateurs() {
         return annotateurRepository.count();
     }
+
+    public void deleteLogically(Long id) {
+        Annotateur annotateur = annotateurRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Annotateur not found with id: " + id));
+            
+        annotateur.setDeleted(true);
+        annotateurRepository.save(annotateur);
+    }
 }
