@@ -1,6 +1,8 @@
 package com.annotations.demo.controller;
 
+import com.annotations.demo.dto.UserDto;
 import com.annotations.demo.entity.*;
+import com.annotations.demo.repository.AnnotateurRepository;
 import com.annotations.demo.repository.RoleRepository;
 import com.annotations.demo.service.*;
 import org.apache.commons.lang3.StringUtils;
@@ -48,12 +50,16 @@ public class AdminController {
     private final DatasetService datasetService;
     private final AnnotationService annotationService;
     private final TaskProgressService taskProgressService;
+    private final AnnotateurRepository annotateurRepository;
+
 
     @Autowired
     public AdminController(
             UserService userService, AnnotateurService annotateurService,
             RoleRepository roleRepository, TaskService taskService, DatasetService datasetService,
-            AnnotationService annotationService, TaskProgressService taskProgressService) {
+                AnnotationService annotationService, TaskProgressService taskProgressService,
+                AnnotateurRepository annotateurRepository) {
+            this.annotateurRepository = annotateurRepository;
         this.userService = userService;
         this.annotateurService = annotateurService;
         this.roleRepository = roleRepository;
@@ -113,8 +119,9 @@ public class AdminController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Liste des annotateurs récupérée avec succès")
     })
     public ResponseEntity<?> getAnnotateurs() {
-        List<Annotateur> annotateurs = annotateurService.findAllActive();
-        Map<Long, LocalDateTime> lastActivity = new HashMap<>();
+        List<Annotateur> annotateurs = annotateurRepository.findAll();
+        System.out.println("Annotateurs: " + annotateurs);
+       /* Map<Long, LocalDateTime> lastActivity = new HashMap<>();
 
         for (Annotateur annotateur : annotateurs) {
             TaskProgress latestProgress = taskProgressService.getLastAnnotationByUser(annotateur);
@@ -124,9 +131,9 @@ public class AdminController {
         Map<String, Object> response = new HashMap<>();
         response.put("userName", StringUtils.capitalize(userService.getCurrentUserName()));
         response.put("lastActivity", lastActivity);
-        response.put("annotateurs", annotateurs);
+        response.put("annotateurs", annotateurs);*/ 
         
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(annotateurs);
     }
     
 
@@ -174,33 +181,27 @@ public class AdminController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Annotateur non trouvé pour la mise à jour")
     })
     public ResponseEntity<?> saveAnnotateur(
-            @io.swagger.v3.oas.annotations.Parameter(description = "Données de l'annotateur à créer/modifier") @RequestBody User user) {
+            @io.swagger.v3.oas.annotations.Parameter(description = "Données de l'annotateur à créer/modifier") @RequestBody UserDto user) {
         try {
             boolean isUpdateOperation = user.getId() != null;
             
-            if (!isUpdateOperation) { // This is a CREATE operation
+            if (!isUpdateOperation) {
                 Role annotateurRole = roleRepository.findByRole(RoleType.USER_ROLE);
                 if (annotateurRole == null) {
                     throw new IllegalStateException("Annotateur role not found in the database");
                 }
                 user.setRole(annotateurRole);
                 user.setDeleted(false);
-            } else { // This is an UPDATE operation
-                Annotateur existingAnnotateur = annotateurService.findAnnotateurById(user.getId());
-                if (existingAnnotateur == null) {
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                                         .body(Map.of("error", "Annotateur not found with id: " + user.getId()));
-                }
             }
-    
-            User savedUser = annotateurService.save(user); // save handles both create and update
-            return ResponseEntity.ok(Map.of(
-                "message", isUpdateOperation ? "Annotateur updated successfully" : "Annotateur added successfully",
-                "user", savedUser
-            ));
+
+            User savedUser = annotateurService.saveAnnotateur(user);
+            Map<String, Object> result = new HashMap<>();
+            result.put("message", isUpdateOperation ? "Annotateur updated successfully" : "Annotateur added successfully");
+            result.put("user", savedUser);
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of(
-                "error", "Error " + (user.getId() != null && user.getId() != 0L ? "updating" : "adding") + " annotateur: " + e.getMessage()
+                "error", "Error " + (user.getId() != null ? "updating" : "adding") + " annotateur: " + e.getMessage()
             ));
         }
     }
@@ -216,7 +217,8 @@ public class AdminController {
      * - L'annotateur n'est plus listé comme actif
      * - La gestion des erreurs pour ID invalide
      */
-    @DeleteMapping("/annotateurs/{id}")
+  
+  /*    @DeleteMapping("/annotateurs/{id}")
     @PreAuthorize("hasRole('ADMIN_ROLE')")
     @SecurityRequirement(name = "bearerAuth")
     @io.swagger.v3.oas.annotations.Operation(
@@ -226,6 +228,7 @@ public class AdminController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Annotateur supprimé avec succès"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Annotateur non trouvé")
     })
+    
     public ResponseEntity<?> deleteAnnotateur(
             @io.swagger.v3.oas.annotations.Parameter(description = "ID de l'annotateur à supprimer") @PathVariable Long id) {
         Annotateur annotateur = annotateurService.findAnnotateurById(id);
@@ -236,6 +239,7 @@ public class AdminController {
         annotateurService.deleteLogically(id);
         return ResponseEntity.ok(Map.of("message", "Annotateur deleted successfully"));
     }
+        */
 
 
 }

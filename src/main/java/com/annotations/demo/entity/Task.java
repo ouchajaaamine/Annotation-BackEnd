@@ -10,6 +10,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Getter
@@ -29,8 +32,8 @@ public class Task {
     
     @ManyToOne
     @JoinColumn(name = "annotateur_id")
+    @JsonIgnoreProperties({"taches", "annotations", "password"})
     private Annotateur annotateur;
-
 
     //hibernete va cree ici un table association qui lie entre les taches et les couples de textes
 
@@ -40,10 +43,12 @@ public class Task {
         joinColumns = @JoinColumn(name = "tache_id"),
         inverseJoinColumns = @JoinColumn(name = "couple_id")
     )
+    @JsonIgnoreProperties("taches")
     private List<CoupleText> couples = new ArrayList<>();
     
 
     @ManyToOne
+    @JsonBackReference
     @JoinColumn(name = "dataset_id")
     private Dataset dataset;
 

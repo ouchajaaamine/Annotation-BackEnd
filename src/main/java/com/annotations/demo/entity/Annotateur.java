@@ -13,6 +13,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(name = "annotateurs")
@@ -28,7 +30,8 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Annotateur extends User {
     
-    @OneToMany(mappedBy = "annotateur" , cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "annotateur", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties({"annotateur", "couples"})
     private List<Task> taches = new ArrayList<>();
 
     @OneToMany(mappedBy="annotateur", cascade = CascadeType.ALL)

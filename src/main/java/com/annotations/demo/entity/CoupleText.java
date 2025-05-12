@@ -3,6 +3,7 @@ package com.annotations.demo.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +29,8 @@ public class CoupleText {
     @Column(name = "original_id")
     private Long originalId; // Nouveau champ pour le suivi de l'ID originale
 
-    @ManyToMany(mappedBy = "couples", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "couples")
+    @JsonIgnoreProperties({"couples", "annotateur"})
     private List<Task> taches = new ArrayList<>();
 
     @ManyToOne
