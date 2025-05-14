@@ -29,23 +29,14 @@ public class AssignTaskToAnnotator {
 
 
     public void assignTaskToAnnotator(List<Annotateur> annotateurList, Dataset dataset, Date deadline) {
-
         // Récupération des paires de texte du dataset
         Long datasetId = dataset.getId();
         List<CoupleText> coupleTextList = coupleTextServiceImpl.findAllCoupleTextsByDatasetId(datasetId);
 
-        // Étape 1 : Duplication des paires (3 fois chacune)
-        List<CoupleText> duplicatedPairs = new ArrayList<>();
-        for (CoupleText couple : coupleTextList) {
-            for (int i = 0; i < 3; i++) {  // 3 annotations par paire
-                duplicatedPairs.add(new CoupleText(couple));  // Constructeur de copie ou méthode clone()
-            }
-        }
+        // Mélanger les paires pour une distribution aléatoire
+        Collections.shuffle(coupleTextList);
 
-        // Étape 2 : Mélanger les paires dupliquées
-        Collections.shuffle(duplicatedPairs);
-
-        // Étape 3 : Assignation round-robin aux annotateurs
+        // Étape 1 : Assignation round-robin aux annotateurs
         int annotatorCount = annotateurList.size();
         Map<Annotateur, List<CoupleText>> taskMap = new HashMap<>();
 
@@ -55,21 +46,13 @@ public class AssignTaskToAnnotator {
         }
 
         // Distribution round-robin
-        for (int i = 0; i < duplicatedPairs.size(); i++) {
+        for (int i = 0; i < coupleTextList.size(); i++) {
             Annotateur annotator = annotateurList.get(i % annotatorCount);
-            CoupleText pair = duplicatedPairs.get(i);
-
-            // Éviter qu’un annotateur reçoive la même paire originale plusieurs fois
-            if (!hasAnnotatorAlreadyReceivedOriginalPair(annotator, pair, coupleTextList)) {
-                taskMap.get(annotator).add(pair);
-            } else {
-                // Si déjà attribué, passer à l’annotateur suivant (simple fallback)
-                int nextIndex = (i + 1) % annotatorCount;
-                taskMap.get(annotateurList.get(nextIndex)).add(pair);
-            }
+            CoupleText pair = coupleTextList.get(i);
+            taskMap.get(annotator).add(pair);
         }
 
-        // Étape 4 : Création des tâches dans la base de données
+        // Étape 2 : Création des tâches dans la base de données
         for (Map.Entry<Annotateur, List<CoupleText>> entry : taskMap.entrySet()) {
             Annotateur annotator = entry.getKey();
             List<CoupleText> tasks = entry.getValue();
@@ -85,7 +68,7 @@ public class AssignTaskToAnnotator {
         }
     }
 
-    // Méthode utilitaire pour éviter la répétition d’une paire originale pour un annotateur
+    // Méthode utilitaire pour éviter la répétition d'une paire originale pour un annotateur
     private boolean hasAnnotatorAlreadyReceivedOriginalPair(Annotateur annotator, CoupleText duplicatedPair, List<CoupleText> originalPairs) {
         // Recherche de la paire originale correspondante
         return originalPairs.stream()

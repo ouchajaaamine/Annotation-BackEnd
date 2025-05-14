@@ -178,8 +178,6 @@ public class DatasetServiceImpl implements DatasetService {
 
             // Save all couples and attach them to the dataset
             coupleTextRepository.saveAll(coupleTexts);
-            dataset.setCoupleTexts(coupleTexts);
-            datasetRepository.save(dataset);
 
         } catch (IOException e) {
             throw new RuntimeException("Error reading Excel file", e);

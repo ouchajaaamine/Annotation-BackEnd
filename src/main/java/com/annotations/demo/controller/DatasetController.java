@@ -190,9 +190,6 @@ public class DatasetController {
     ) {
         try {
             Dataset dataset = datasetService.createDataset(name, description, file, classesRaw);
-            datasetService.SaveDataset(dataset);
-            asyncDatasetParserService.parseDatasetAsync(dataset);
-            
             return ResponseEntity.ok(dataset);
         } catch (IOException e) {
             return ResponseEntity.badRequest()
