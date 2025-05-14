@@ -18,6 +18,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
@@ -36,17 +37,15 @@ public class Dataset {
     private String filePath;
     private String fileType;
 
-
-    //relation taches/dataset
+    @JsonIgnore
     @OneToMany(mappedBy="dataset")
     private List<Task> tasks = new ArrayList<>();
 
-    //relation classe/dataset
     @JsonManagedReference
     @OneToMany(mappedBy="dataset", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ClassPossible> classesPossibles = new HashSet<>();
 
-    //relation coupleText/dataset
+    @JsonIgnore
     @OneToMany(mappedBy="dataset")
     private Set<CoupleText> coupleTexts = new HashSet<>();
 }

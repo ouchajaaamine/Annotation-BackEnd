@@ -25,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -108,7 +109,33 @@ public class DatasetController {
             return ResponseEntity.notFound().build();
         }
 
+        // Nettoyer les relations circulaires dans le dataset
+        if (dataset.getTasks() != null) {
+            dataset.getTasks().forEach(task -> {
+                task.setDataset(null);
+                if (task.getCouples() != null) {
+                    task.getCouples().forEach(couple -> {
+                        couple.setTaches(null);
+                        couple.setDataset(null);
+                    });
+                }
+            });
+        }
+        dataset.setCoupleTexts(null);
+
+        // Récupérer les couples de texte avec pagination
         Page<CoupleText> coupleTextsPage = coupleTextService.getCoupleTextsByDatasetId(id, page, size);
+        List<CoupleText> simplifiedCoupleTexts = coupleTextsPage.getContent().stream()
+            .map(couple -> {
+                CoupleText simplified = new CoupleText();
+                simplified.setId(couple.getId());
+                simplified.setText_1(couple.getText_1());
+                simplified.setText_2(couple.getText_2());
+                simplified.setOriginalId(couple.getOriginalId());
+                return simplified;
+            })
+            .collect(Collectors.toList());
+
         int totalPages = coupleTextsPage.getTotalPages();
         int currentPage = page;
         int startPage = Math.max(0, currentPage - 2);
@@ -117,7 +144,7 @@ public class DatasetController {
         Map<String, Object> response = new HashMap<>();
         response.put("userName", StringUtils.capitalize(userService.getCurrentUserName()));
         response.put("dataset", dataset);
-        response.put("coupleTexts", coupleTextsPage.getContent());
+        response.put("coupleTexts", simplifiedCoupleTexts);
         response.put("pagination", Map.of(
                 "currentPage", currentPage,
                 "totalPages", totalPages,
