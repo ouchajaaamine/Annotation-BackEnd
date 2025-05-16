@@ -2,6 +2,7 @@ package com.annotations.demo.controller;
 
 import com.annotations.demo.entity.Annotateur;
 import com.annotations.demo.entity.Dataset;
+import com.annotations.demo.entity.Task;
 import com.annotations.demo.service.AnnotateurService;
 import com.annotations.demo.service.AssignTaskToAnnotator;
 import com.annotations.demo.service.DatasetService;
@@ -113,31 +114,34 @@ public class TaskController {
     }
 
     /**
-     * Récupère la liste des annotateurs disponibles pour un dataset.
+     * Récupère la liste des annotateurs assignés à un dataset.
      *
      * @param id ID du dataset
-     * @return ResponseEntity contenant la liste des annotateurs actifs
+     * @return ResponseEntity contenant la liste des annotateurs assignés au dataset
      *
      * Test : Envoyer une requête GET à /api/tasks/datasets/{id}/annotators et vérifier :
      * - Le statut HTTP est 200 pour dataset existant
      * - Le statut HTTP est 404 pour dataset inexistant
-     * - Seuls les annotateurs actifs sont inclus
+     * - Seuls les annotateurs assignés au dataset sont inclus
      */
     @GetMapping("/datasets/{id}/annotators")
-    @io.swagger.v3.oas.annotations.Operation(summary = "Obtenir les annotateurs disponibles", 
-        description = "Récupère la liste des annotateurs disponibles pour un dataset spécifique")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Obtenir les annotateurs assignés", 
+        description = "Récupère la liste des annotateurs assignés à un dataset spécifique")
     @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Liste des annotateurs récupérée avec succès"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Dataset non trouvé")
     })
     public ResponseEntity<List<Annotateur>> getDatasetAnnotators(
             @io.swagger.v3.oas.annotations.Parameter(description = "ID du dataset") @PathVariable Long id) {
-        Dataset dataset = datasetService.findDatasetById(id);
+        Dataset dataset = datasetService.findDatasetById(id);   
         if (dataset == null) {
             return ResponseEntity.notFound().build();
         }
-        List<Annotateur> annotateurs = annotateurService.findAllActive();
+
+        List<Annotateur> annotateurs = annotateurService.findAllByDataset(dataset);
         return ResponseEntity.ok(annotateurs);
     }
+
+
 
 }

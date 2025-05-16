@@ -1,9 +1,7 @@
 package com.annotations.demo.service;
 
 import com.annotations.demo.dto.UserDto;
-import com.annotations.demo.entity.Annotateur;
-import com.annotations.demo.entity.Role;
-import com.annotations.demo.entity.User;
+import com.annotations.demo.entity.*;
 import com.annotations.demo.repository.AnnotateurRepository;
 import com.annotations.demo.repository.RoleRepository;
 import com.annotations.demo.repository.UserRepository;
@@ -19,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 @Service
 public class AnnotateurService extends GenericUserService {
@@ -102,7 +101,9 @@ public class AnnotateurService extends GenericUserService {
     }
 
     public long countActiveAnnotateurs() {
+
         return annotateurRepository.count();
+
     }
 
     public void deleteLogically(Long id) {
@@ -112,4 +113,15 @@ public class AnnotateurService extends GenericUserService {
         annotateur.setDeleted(true);
         annotateurRepository.save(annotateur);
     }
+    public List<Annotateur> findAllByDataset(Dataset dataset) {
+        List<Task> tasks = dataset.getTasks();
+        List<Annotateur> annotateursAssigned = tasks.stream()
+                .filter(task -> task.getAnnotateur() != null)
+                .map(Task::getAnnotateur)
+                .distinct()
+                .collect(Collectors.toList());
+        
+        return annotateursAssigned;
+    }
+
 }
